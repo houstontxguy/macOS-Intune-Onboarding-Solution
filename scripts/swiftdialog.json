@@ -1,0 +1,49 @@
+{
+    "title": "Setting Up Your Mac",
+    "message": "Please wait while we install the required applications. This process may take 10-15 minutes.\n\nYour Mac will be ready to use once all items show a green checkmark.",
+    "icon": "/Library/Application Support/Microsoft/IntuneScripts/Swift Dialog/icons/company-logo.png",
+    "iconsize": "128",
+    "button1disabled": true,
+    "button1text": "Please Wait...",
+    "blurscreen": false,
+    "ontop": false,
+    "position": "center",
+    "moveable": true,
+    "width": "700",
+    "height": "500",
+    "progress": "100",
+    "progresstext": "Installing applications...",
+    "liststyle": "expanded",
+    "listitem": [
+        {
+            "title": "Company Portal",
+            "icon": "/Library/Application Support/Microsoft/IntuneScripts/Swift Dialog/icons/companyportal.png",
+            "status": "pending",
+            "statustext": "Waiting..."
+        },
+        {
+            "title": "Microsoft Office",
+            "icon": "/Library/Application Support/Microsoft/IntuneScripts/Swift Dialog/icons/office.png",
+            "status": "pending",
+            "statustext": "Waiting..."
+        },
+        {
+            "title": "Zoom",
+            "icon": "/Library/Application Support/Microsoft/IntuneScripts/Swift Dialog/icons/zoom.png",
+            "status": "pending",
+            "statustext": "Waiting..."
+        },
+        {
+            "title": "Security Agent",
+            "icon": "/Library/Application Support/Microsoft/IntuneScripts/Swift Dialog/icons/security.png",
+            "status": "pending",
+            "statustext": "Waiting..."
+        },
+        {
+            "title": "VPN Client",
+            "icon": "/Library/Application Support/Microsoft/IntuneScripts/Swift Dialog/icons/vpn.png",
+            "status": "pending",
+            "statustext": "Waiting..."
+        }
+    ]
+}
