@@ -17,6 +17,8 @@ Built on top of [Microsoft's Swift Dialog sample](https://github.com/microsoft/s
 - 😴 **Sleep Prevention** — Caffeinate prevents Mac from sleeping during setup
 - 🏷️ **Device Naming** — Automatic naming for Intune targeting
 - 🧹 **Self-Cleanup** — LaunchDaemon removes itself after completion
+  
+![Sample screenshot](https://raw.githubusercontent.com/houstontxguy/macOS-Intune-Onboarding-Solution/main/sample.jpeg)
 
 ## Architecture
 
