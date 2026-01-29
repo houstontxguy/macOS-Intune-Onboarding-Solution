@@ -9,7 +9,7 @@
 ##   (enrollment window check is skipped if onboarding was already started)
 ##
 ## v1.3 Changes:
-## - Device naming: CMM_PS-serial during provisioning, CMM-serial after completion
+## - Device naming during provisioning and after completion
 ## - Intune filter support for targeting completed devices
 ## - Caffeinate for sleep prevention
 ## - Cleanup on completion flag detection
@@ -19,22 +19,42 @@
 ## 1. The onboarding.zsh script
 ## 2. A LaunchDaemon to run it at boot
 ##
-## Author: Aaron Voges - ExxonMobil IT
 ## Attribution: Based on concepts from Microsoft's shell-intune-samples
 ##############################################
 
 # Exit on error
 set -e
 
-# --- Configuration Variables ---
-# Modify these for your environment
-onboardingScriptsUrl="https://cmmappstorage.blob.core.windows.net/core-installs/onboarding_scripts.zip?YOUR_SAS_TOKEN_HERE"
-enrollmentWindowHours=1  # Skip onboarding if device was enrolled more than this many hours ago
+# ============================================
+# CONFIGURATION - MODIFY THESE FOR YOUR ORG
+# ============================================
+
+# Your Azure Blob Storage URL with SAS token for the onboarding scripts package
+onboardingScriptsUrl="https://YOUR_STORAGE_ACCOUNT.blob.core.windows.net/YOUR_CONTAINER/onboarding_scripts.zip?YOUR_SAS_TOKEN"
+
+# How long after enrollment should onboarding still run? (in hours)
+# Devices enrolled longer than this will skip onboarding (unless already in progress)
+enrollmentWindowHours=1
+
+# Organization identifier for LaunchDaemon naming (use reverse domain notation)
+# Example: com.contoso, com.mycompany, org.school
+ORG_IDENTIFIER="com.yourorg"
+
+# Device naming prefixes
+# During provisioning (helps identify devices still being set up)
+DEVICE_PREFIX_PROVISIONING="MAC-PROV"
+# After completion (helps with Intune filters for targeting)
+DEVICE_PREFIX_COMPLETED="MAC"
+
+# ============================================
+# END CONFIGURATION
+# ============================================
 
 # --- Paths ---
 SUPPORT_DIR="/Library/Application Support/Microsoft/IntuneScripts/onBoarding"
 SCRIPT_PATH="$SUPPORT_DIR/onboarding.zsh"
-PLIST="/Library/LaunchDaemons/com.exxonmobil.intune.onboarding.plist"
+PLIST="/Library/LaunchDaemons/${ORG_IDENTIFIER}.intune.onboarding.plist"
+LAUNCHDAEMON_LABEL="${ORG_IDENTIFIER}.intune.onboarding"
 
 # --- Create directory structure ---
 mkdir -p "$SUPPORT_DIR"
@@ -51,13 +71,17 @@ cat > "$SCRIPT_PATH" << 'ONBOARDING_SCRIPT_EOF'
 # Configuration (injected by bootstrap script)
 onboardingScriptsUrl="__ONBOARDING_SCRIPTS_URL__"
 enrollmentWindowHours=__ENROLLMENT_WINDOW_HOURS__
+ORG_IDENTIFIER="__ORG_IDENTIFIER__"
+DEVICE_PREFIX_PROVISIONING="__DEVICE_PREFIX_PROVISIONING__"
+DEVICE_PREFIX_COMPLETED="__DEVICE_PREFIX_COMPLETED__"
 
 # Paths
 SUPPORT_DIR="/Library/Application Support/Microsoft/IntuneScripts/onBoarding"
 SWIFT_DIALOG_DIR="/Library/Application Support/Microsoft/IntuneScripts/Swift Dialog"
 completionFlag="$SUPPORT_DIR/onboardingcompleted.flag"
 inProgressFlag="$SUPPORT_DIR/onboarding_inprogress.flag"
-PLIST="/Library/LaunchDaemons/com.exxonmobil.intune.onboarding.plist"
+PLIST="/Library/LaunchDaemons/${ORG_IDENTIFIER}.intune.onboarding.plist"
+LAUNCHDAEMON_LABEL="${ORG_IDENTIFIER}.intune.onboarding"
 tempdir=$(mktemp -d)
 
 echo ""
@@ -82,7 +106,7 @@ if [[ -f "$completionFlag" ]]; then
     rm -f "$inProgressFlag"
     
     echo "$(date) | Unloading LaunchDaemon..."
-    launchctl bootout system/com.exxonmobil.intune.onboarding 2>/dev/null
+    launchctl bootout system/$LAUNCHDAEMON_LABEL 2>/dev/null
     
     exit 0
 fi
@@ -127,10 +151,12 @@ fi
 
 # --- Set device name (provisioning status) ---
 serial=$(system_profiler SPHardwareDataType | awk '/Serial Number/{print $NF}')
-echo "$(date) | Setting device name to CMM_PS-$serial (provisioning in progress)"
-scutil --set ComputerName "CMM_PS-$serial"
-scutil --set LocalHostName "CMM-PS-$serial"  # LocalHostName cannot have underscores
-scutil --set HostName "CMM_PS-$serial"
+echo "$(date) | Setting device name to ${DEVICE_PREFIX_PROVISIONING}-$serial (provisioning in progress)"
+scutil --set ComputerName "${DEVICE_PREFIX_PROVISIONING}-$serial"
+# LocalHostName cannot have underscores, so we replace them with hyphens
+localHostName=$(echo "${DEVICE_PREFIX_PROVISIONING}-$serial" | tr '_' '-')
+scutil --set LocalHostName "$localHostName"
+scutil --set HostName "${DEVICE_PREFIX_PROVISIONING}-$serial"
 
 # --- Install Rosetta 2 if needed ---
 echo "$(date) | Checking if we need Rosetta 2..."
@@ -241,10 +267,10 @@ wait
 echo "$(date) | All install scripts finished."
 
 # --- Set device name (completed) ---
-echo "$(date) | Renaming device to CMM-$serial (onboarding complete)"
-scutil --set ComputerName "CMM-$serial"
-scutil --set LocalHostName "CMM-$serial"
-scutil --set HostName "CMM-$serial"
+echo "$(date) | Renaming device to ${DEVICE_PREFIX_COMPLETED}-$serial (onboarding complete)"
+scutil --set ComputerName "${DEVICE_PREFIX_COMPLETED}-$serial"
+scutil --set LocalHostName "${DEVICE_PREFIX_COMPLETED}-$serial"
+scutil --set HostName "${DEVICE_PREFIX_COMPLETED}-$serial"
 
 # --- Write completion flag ---
 echo "$(date) | Writing completion flag..."
@@ -274,7 +300,7 @@ echo "$(date) | Deleting onboarding script..."
 rm -f "$SUPPORT_DIR/onboarding.zsh"
 
 echo "$(date) | Unloading LaunchDaemon..."
-launchctl bootout system/com.exxonmobil.intune.onboarding 2>/dev/null
+launchctl bootout system/$LAUNCHDAEMON_LABEL 2>/dev/null
 
 echo "$(date) | Cleaning up temp directory..."
 rm -rf "$tempdir"
@@ -288,18 +314,21 @@ ONBOARDING_SCRIPT_EOF
 # --- Inject configuration values into onboarding.zsh ---
 sed -i '' "s|__ONBOARDING_SCRIPTS_URL__|${onboardingScriptsUrl}|g" "$SCRIPT_PATH"
 sed -i '' "s|__ENROLLMENT_WINDOW_HOURS__|${enrollmentWindowHours}|g" "$SCRIPT_PATH"
+sed -i '' "s|__ORG_IDENTIFIER__|${ORG_IDENTIFIER}|g" "$SCRIPT_PATH"
+sed -i '' "s|__DEVICE_PREFIX_PROVISIONING__|${DEVICE_PREFIX_PROVISIONING}|g" "$SCRIPT_PATH"
+sed -i '' "s|__DEVICE_PREFIX_COMPLETED__|${DEVICE_PREFIX_COMPLETED}|g" "$SCRIPT_PATH"
 
 chmod 755 "$SCRIPT_PATH"
 
 # --- Write the LaunchDaemon plist ---
-cat > "$PLIST" << 'EOF'
+cat > "$PLIST" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.exxonmobil.intune.onboarding</string>
+    <string>${LAUNCHDAEMON_LABEL}</string>
     <key>ProgramArguments</key>
     <array>
         <string>/bin/zsh</string>
@@ -321,13 +350,13 @@ chmod 644 "$PLIST"
 
 # --- Load the LaunchDaemon ---
 # First check if LaunchDaemon is already loaded and unload it (for script updates)
-if launchctl print system/com.exxonmobil.intune.onboarding &>/dev/null; then
+if launchctl print system/$LAUNCHDAEMON_LABEL &>/dev/null; then
     echo "LaunchDaemon already loaded, unloading first..."
-    launchctl bootout system/com.exxonmobil.intune.onboarding 2>/dev/null
+    launchctl bootout system/$LAUNCHDAEMON_LABEL 2>/dev/null
     sleep 1
 fi
 
 launchctl bootstrap system "$PLIST"
-launchctl enable system/com.exxonmobil.intune.onboarding
+launchctl enable system/$LAUNCHDAEMON_LABEL
 
 echo "Bootstrap complete. LaunchDaemon will start onboarding process."
