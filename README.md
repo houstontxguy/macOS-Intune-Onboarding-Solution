@@ -237,6 +237,38 @@ az storage blob upload-batch \
 
 See `scripts/examples/02-installMicrosoftOffice-chunked.zsh` for a complete example.
 
+## Example Scripts
+
+The `scripts/examples/` folder contains templates for common scenarios:
+
+| Script | Description |
+|--------|-------------|
+| `00-template.zsh` | Basic template for PKG or DMG installation |
+| `01-installCompanyPortal.zsh` | Simple PKG installation example |
+| `02-installMicrosoftOffice-chunked.zsh` | Parallel chunked download for large files |
+| `10-installAfterDependencies.zsh` | Wait for other apps before installing |
+
+### Dependency-Based Installation
+
+Some packages need to be installed after others (e.g., Microsoft AutoUpdate after Office). The `10-installAfterDependencies.zsh` example demonstrates:
+
+```bash
+# Dependencies - wait for these apps to be installed first
+DEPENDENCIES=(
+    "/Applications/Microsoft Word.app"
+    "/Applications/Microsoft Excel.app"
+)
+
+# How long to wait for dependencies (in seconds)
+DEPENDENCY_TIMEOUT=600  # 10 minutes
+```
+
+The script will poll for the existence of each dependency before proceeding with its own installation. This is useful for:
+
+- Installing Microsoft AutoUpdate after Microsoft Office
+- Installing plugins after their parent application
+- Installing configuration tools after the app they configure
+
 ## Swift Dialog Integration
 
 Install scripts communicate with Swift Dialog by writing to `/var/tmp/dialog.log`:
