@@ -1,0 +1,26 @@
+{
+    "title" : "Welcome to Your Organization",
+    "message" : "Please wait while we configure your device and install the following applications.",
+    "blurscreen": true,
+    "moveable": false,
+    "ontop": true,
+    "button1text": "Exit - Installations will continue",
+    "icon" : "/Library/Application Support/Microsoft/IntuneScripts/Swift Dialog/icons/logo.png",
+    "centreicon": false,
+    "iconsize" : "170",
+    "infobox" : "Loading device info...",
+    "progress" : 100,
+    "progresstext" : " ",
+    "listitem" : [
+      {"title" : "MDM Enrollment Client", "icon" : "/Library/Application Support/Microsoft/IntuneScripts/Swift Dialog/icons/app-01.png", "status" : "pending", "statustext" : "Pending"},
+      {"title" : "Office Suite", "icon" : "/Library/Application Support/Microsoft/IntuneScripts/Swift Dialog/icons/app-02.png", "status" : "pending", "statustext" : "Pending"},
+      {"title" : "Web Browser", "icon" : "/Library/Application Support/Microsoft/IntuneScripts/Swift Dialog/icons/app-03.png", "status" : "pending", "statustext" : "Pending"},
+      {"title" : "Endpoint Security", "icon" : "/Library/Application Support/Microsoft/IntuneScripts/Swift Dialog/icons/app-04.png", "status" : "pending", "statustext" : "Pending"},
+      {"title" : "Video Conferencing", "icon" : "/Library/Application Support/Microsoft/IntuneScripts/Swift Dialog/icons/app-05.png", "status" : "pending", "statustext" : "Pending"},
+      {"title" : "Monitoring Agent", "icon" : "/Library/Application Support/Microsoft/IntuneScripts/Swift Dialog/icons/app-06.png", "status" : "pending", "statustext" : "Pending"},
+      {"title" : "DNS Security", "icon" : "/Library/Application Support/Microsoft/IntuneScripts/Swift Dialog/icons/app-08.png", "status" : "pending", "statustext" : "Pending"},
+      {"title" : "Privilege Manager", "icon" : "/Library/Application Support/Microsoft/IntuneScripts/Swift Dialog/icons/app-07.png", "status" : "pending", "statustext" : "Pending"},
+      {"title" : "Cloud Connector", "icon" : "/Library/Application Support/Microsoft/IntuneScripts/Swift Dialog/icons/app-09.png", "status" : "pending", "statustext" : "Pending"},
+      {"title" : "VPN Client", "icon" : "/Library/Application Support/Microsoft/IntuneScripts/Swift Dialog/icons/app-10.png", "status" : "pending", "statustext" : "Pending"}
+    ]
+  }
